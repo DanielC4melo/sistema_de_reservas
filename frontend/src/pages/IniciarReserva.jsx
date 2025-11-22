@@ -22,6 +22,9 @@ export default function IniciarReserva() {
     const [dataSelecionada, setDataSelecionada] = useState('');
     const [horarioSelecionado, setHorarioSelecionado] = useState(null);
     const [equipamento, setEquipamento] = useState(false);
+    const [equipamentosLista, setEquipamentosLista] = useState([]);
+    const [equipamentoSelecionado, setEquipamentoSelecionado] = useState('');
+    const [usuario, setUsuario] = useState(null);
 
     const horariosFixos = [
         { inicio: '14:00', fim: '16:00' },
@@ -31,19 +34,63 @@ export default function IniciarReserva() {
     ];
 
     useEffect(() => {
-        // puxando as salas
+        const userStorage = localStorage.getItem('user');
+        if (userStorage) {
+            setUsuario(JSON.parse(userStorage));
+        } else {
+            navigate('/');
+        }
+
         api.get('/salas')
             .then(res => setSalas(res.data))
+            .catch(err => console.log(err));
+
+        api.get('/equipamentos')
+            .then(res => setEquipamentosLista(res.data))
             .catch(err => console.log(err));
     }, []);
 
     const selecionarHorario = (horario) => {
+        if (!salaSelecionada || !dataSelecionada) {
+            alert("Por favor, selecione uma Sala e uma Data antes de escolher o horário.");
+            return;
+        }
         setHorarioSelecionado(horario);
     };
 
-    const confirmarReserva = () => {
-        alert("Reserva realizada!");
-        navigate('/home');
+    const confirmarReserva = async () => {
+        if (!salaSelecionada || !dataSelecionada || !horarioSelecionado) {
+            alert("Preencha todos os dados!");
+            return;
+        }
+
+        if (equipamento && !equipamentoSelecionado) {
+            alert("Você marcou que quer equipamento, mas não selecionou qual!");
+            return;
+        }
+
+        const dataISO = `${dataSelecionada}T${horarioSelecionado}:00`;
+        
+        const payload = {
+            dataReserva: dataISO,
+            sala: { id: salaSelecionada }, 
+            
+            professor: { idProfessor: usuario.id },
+            criadaPor: "PROFESSOR",
+            
+            equipamento: (equipamento && equipamentoSelecionado) ? { id: equipamentoSelecionado } : null
+        };
+        // ---------------------------
+
+        try {
+            await api.post('/reservas', payload);
+            alert("Reserva realizada com sucesso!");
+            navigate('/home');
+        } catch (error) {
+            console.error(error);
+            const msg = error.response?.data || "Erro ao realizar reserva.";
+            alert(msg);
+        }
     };
 
     return (
@@ -74,8 +121,9 @@ export default function IniciarReserva() {
                                 <select 
                                     style={{padding: '5px 10px', borderRadius: '15px', border: '1px solid #ccc', backgroundColor: '#D9D9D9'}}
                                     onChange={(e) => setSalaSelecionada(e.target.value)}
+                                    value={salaSelecionada}
                                 >
-                                    <option>Exibir Lista</option>
+                                    <option value="">Selecione...</option>
                                     {salas.map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}
                                 </select>
                             </div>
@@ -85,6 +133,7 @@ export default function IniciarReserva() {
                                     type="date" 
                                     style={{padding: '5px 10px', borderRadius: '15px', border: '1px solid #ccc', backgroundColor: '#D9D9D9'}}
                                     onChange={(e) => setDataSelecionada(e.target.value)} 
+                                    value={dataSelecionada}
                                 />
                             </div>
                         </div>
@@ -101,12 +150,6 @@ export default function IniciarReserva() {
                                     <span></span>
                                 </div>
                             ))}
-                            
-                            <div style={{...styles.slot, ...styles.ocupado}}>
-                                <span style={{fontSize: '18px'}}>16:00</span>
-                                <span style={{fontSize: '18px'}}>Reservado</span>
-                                <span style={{fontSize: '18px'}}>Professor</span>
-                            </div>
                         </div>
                     </>
                 ) : (
@@ -115,7 +158,7 @@ export default function IniciarReserva() {
                             <h1 style={{textAlign: 'right', fontWeight: 'normal'}}>Realizar Reserva</h1>
                             
                             <div style={{display: 'flex', justifyContent: 'space-between', margin: '20px 0', fontSize: '18px'}}>
-                                <span>Sala {salas.find(s => s.id == salaSelecionada)?.nome || '...'}</span>
+                                <span>Sala {salas.find(s => s.id == salaSelecionada)?.nome}</span>
                                 <span>Data: {dataSelecionada} {horarioSelecionado}</span>
                             </div>
 
@@ -129,9 +172,15 @@ export default function IniciarReserva() {
                                 </div>
                                 
                                 {equipamento && (
-                                    <select style={{padding: '10px', borderRadius: '10px', border: 'none'}}>
-                                        <option>Selecionar Equipamento</option>
-                                        <option>Projetor</option>
+                                    <select 
+                                        style={{padding: '10px', borderRadius: '10px', border: 'none'}}
+                                        onChange={(e) => setEquipamentoSelecionado(e.target.value)}
+                                        value={equipamentoSelecionado}
+                                    >
+                                        <option value="">Selecionar Equipamento</option>
+                                        {equipamentosLista.map(eq => (
+                                            <option key={eq.id} value={eq.id}>{eq.nome}</option>
+                                        ))}
                                     </select>
                                 )}
                             </div>
