@@ -20,13 +20,16 @@ export default function MinhasReservas() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // 1. Pegar o usuário logado
         const userStorage = localStorage.getItem('user');
         if (!userStorage) {
-            navigate('/'); // Se não tiver logado da no login
+            navigate('/'); // Se não tiver logado, volta pro login
             return;
         }
         const usuario = JSON.parse(userStorage);
 
+        // 2. Buscar as reservas DESTE professor no Backend
+        // ATENÇÃO: O Backend precisa ter o endpoint GET /reservas/professor/{id} criado
         api.get(`/reservas/professor/${usuario.id}`)
             .then(res => {
                 setReservas(res.data);
@@ -38,7 +41,7 @@ export default function MinhasReservas() {
             });
     }, []);
 
-    //(dd/mm/aaaa HH:mm)
+    // Formatar data para ficar bonito (Dia/Mês/Ano - Hora:Minuto)
     const formatarData = (dataISO) => {
         if (!dataISO) return "-";
         const data = new Date(dataISO);
@@ -66,7 +69,7 @@ export default function MinhasReservas() {
                 <h1 style={styles.title}>Minhas Reservas</h1>
 
                 {loading ? (
-                    <p style={styles.loading}>Carregando suas reservas...</p>
+                    <p style={styles.loading}>Carregando...</p>
                 ) : (
                     <>
                         {reservas.length === 0 ? (
@@ -78,7 +81,7 @@ export default function MinhasReservas() {
                                         <th style={styles.th}>ID</th>
                                         <th style={styles.th}>Data/Hora</th>
                                         <th style={styles.th}>Sala</th>
-                                        <th style={styles.th}>Criado Por</th>
+                                        <th style={styles.th}>Equipamento</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -86,9 +89,9 @@ export default function MinhasReservas() {
                                         <tr key={reserva.id}>
                                             <td style={styles.td}>#{reserva.id}</td>
                                             <td style={styles.td}>{formatarData(reserva.dataReserva)}</td>
-                                            {/* O ponto de interrogação ?. evita erro se a sala vier null */}
-                                            <td style={styles.td}>{reserva.sala?.nome}</td>
-                                            <td style={styles.td}>{reserva.criadaPor}</td>
+                                            {/* O ?. evita erro se a sala for nula */}
+                                            <td style={styles.td}>{reserva.sala?.nome || "Sala Removida"}</td> 
+                                            <td style={styles.td}>{reserva.equipamento ? reserva.equipamento.nome : "Nenhum"}</td>
                                         </tr>
                                     ))}
                                 </tbody>

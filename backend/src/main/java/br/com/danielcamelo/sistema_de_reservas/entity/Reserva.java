@@ -1,5 +1,6 @@
 package br.com.danielcamelo.sistema_de_reservas.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -12,8 +13,12 @@ public class Reserva {
     @Column(name = "idReserva")
     private Integer id;
 
+    // --- AQUI ESTAVA O ERRO ---
+    // O Java precisa que se chame "dataReserva" para o Repository funcionar.
+    // Mas no banco chama-se "data". O @Column faz a tradução.
     @Column(name = "data", nullable = false)
-    private LocalDateTime data;
+    private LocalDateTime dataReserva;
+    // --------------------------
 
     @Column(name = "relatorio")
     private String relatorio;
@@ -22,27 +27,28 @@ public class Reserva {
     @Column(name = "criadaPor", nullable = false)
     private TipoCriador criadaPor;
 
-    // --- RELACIONAMENTOS (FKs) ---
+    // --- RELACIONAMENTOS BLINDADOS ---
 
     @ManyToOne
-    @JoinColumn(name = "fk_idSala", nullable = false)
+    @JoinColumn(name = "fk_IdSala", nullable = false)
+    @JsonIgnoreProperties("reservas")
     private Sala sala;
 
     @ManyToOne
-    @JoinColumn(name = "fk_idProfessor", nullable = false)
+    @JoinColumn(name = "fk_IdProfessor", nullable = false)
+    @JsonIgnoreProperties("reservas")
     private Professor professor;
 
     @ManyToOne
-    @JoinColumn(name = "fk_idCoordenacao", nullable = true) // Opcional
+    @JoinColumn(name = "fk_IdCoordenacao", nullable = true)
+    @JsonIgnoreProperties("reservasCriadas")
     private Coordenacao coordenacao;
 
-    // CORREÇÃO PRINCIPAL: Equipamento no singular (Muitos-para-Um)
-    // Uma reserva tem UM equipamento associado (conforme sua FK fk_idEquipamento)
     @ManyToOne
-    @JoinColumn(name = "fk_idEquipamento")
+    @JoinColumn(name = "fk_IdEquipamento")
+    @JsonIgnoreProperties("reservas")
     private Equipamento equipamento;
 
-    // --- Construtor Vazio ---
     public Reserva() {
     }
 
@@ -56,12 +62,12 @@ public class Reserva {
         this.id = id;
     }
 
-    public LocalDateTime getDataReserva() {
-        return data;
+    public LocalDateTime getDataReserva() { // O Service precisa deste nome!
+        return dataReserva;
     }
 
     public void setDataReserva(LocalDateTime dataReserva) {
-        this.data = dataReserva;
+        this.dataReserva = dataReserva;
     }
 
     public String getRelatorio() {

@@ -6,4 +6,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CoordenacaoRepository extends JpaRepository<Coordenacao, Integer> {
+
+    // Adicione esta linha lá também:
+    Coordenacao findByEmailCoordenacaoAndSenhaCoordenacao(String email, String senha);
+
 }

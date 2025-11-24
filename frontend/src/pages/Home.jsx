@@ -10,23 +10,34 @@ const styles = {
     grid: { display: 'flex', justifyContent: 'center', gap: '50px', marginTop: '80px', flexWrap: 'wrap' },
     card: { display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', gap: '10px', width: '150px' },
     iconCircle: { width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' },
-    label: { fontSize: '18px', textAlign: 'center', color: '#000' }
+    label: { fontSize: '18px', textAlign: 'center', color: '#000' },
+    btnLogout: { backgroundColor: '#d9534f', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '14px', marginLeft: '20px' }
 };
 
 export default function Home() {
     const navigate = useNavigate();
 
+    const handleLogout = () => {
+        // 1. Limpa a memória do navegador
+        localStorage.removeItem('user');
+        // 2. Manda de volta para o Login
+        navigate('/');
+    };
+
     return (
         <div style={styles.container}>
             <header style={styles.header}>
                 <div style={styles.logoSection}>
-                    {/* imagem logo unirio */}
                     <div style={{borderRight: '2px solid #333', paddingRight: '15px'}}>
                         <h1 style={styles.logoText}>UNIRIO</h1>
                         <p style={styles.subText}>Universidade Federal do<br/>Estado do Rio de Janeiro</p>
                     </div>
                 </div>
-                <h2 style={styles.title}>SISTEMA DE RESERVAS</h2>
+                <div style={{display: 'flex', alignItems: 'center'}}>
+                    <h2 style={styles.title}>SISTEMA DE RESERVAS</h2>
+                    {/* BOTÃO DE SAIR AQUI */}
+                    <button style={styles.btnLogout} onClick={handleLogout}>SAIR</button>
+                </div>
             </header>
 
             <div style={styles.grid}>

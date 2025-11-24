@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const styles = {
     container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif' },
@@ -18,11 +19,40 @@ export default function Calendario() {
     const navigate = useNavigate();
     
     const [dataAtual, setDataAtual] = useState(new Date());
+    const [diasComReserva, setDiasComReserva] = useState([]); // Agora começa vazio
 
-    const diasComReserva = [5, 12, 20]; 
+    // Função para carregar reservas do banco
+    const carregarReservas = () => {
+        const userStorage = localStorage.getItem('user');
+        if (!userStorage) return;
+        const usuario = JSON.parse(userStorage);
 
+        api.get(`/reservas/professor/${usuario.id}`)
+            .then(res => {
+                const reservas = res.data;
+                
+                // Filtra apenas as reservas do MÊS e ANO atuais da tela
+                const diasOcupados = reservas
+                    .map(r => new Date(r.dataReserva)) // Converte texto para Data
+                    .filter(data => 
+                        data.getMonth() === dataAtual.getMonth() && 
+                        data.getFullYear() === dataAtual.getFullYear()
+                    )
+                    .map(data => data.getDate()); // Pega só o dia (ex: 25)
+
+                setDiasComReserva(diasOcupados);
+            })
+            .catch(console.error);
+    };
+
+    // Sempre que mudar o mês (dataAtual), recarrega e filtra
+    useEffect(() => {
+        carregarReservas();
+    }, [dataAtual]);
+
+    // Lógica do calendário
     const getDiasNoMes = (ano, mes) => new Date(ano, mes + 1, 0).getDate();
-    const getDiaSemanaInicio = (ano, mes) => new Date(ano, mes, 1).getDay(); // 0 = Domingo
+    const getDiaSemanaInicio = (ano, mes) => new Date(ano, mes, 1).getDay();
 
     const ano = dataAtual.getFullYear();
     const mes = dataAtual.getMonth();
@@ -71,6 +101,7 @@ export default function Calendario() {
                         <div key={dia} style={styles.dayCell}>
                             <span style={styles.dayNumber}>{dia}</span>
                             
+                            {/* Se o dia estiver na lista que veio do banco, pinta de verde */}
                             {diasComReserva.includes(dia) && (
                                 <div style={styles.reservaTag}>Reservado</div>
                             )}

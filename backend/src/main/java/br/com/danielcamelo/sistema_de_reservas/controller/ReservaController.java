@@ -20,6 +20,12 @@ public class ReservaController {
         return reservaService.listarTodas();
     }
 
+    // Este é o método que a página "Minhas Reservas" precisa
+    @GetMapping("/professor/{id}")
+    public List<Reserva> listarPorProfessor(@PathVariable Integer id) {
+        return reservaService.buscarPorProfessor(id);
+    }
+
     @PostMapping
     public ResponseEntity<?> criar(@RequestBody Reserva reserva) {
         try {
@@ -28,5 +34,9 @@ public class ReservaController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+    @GetMapping("/ocupadas")
+    public List<String> getHorariosOcupados(@RequestParam Integer salaId, @RequestParam String data) {
+        return reservaService.buscarHorariosOcupados(salaId, data);
     }
 }
