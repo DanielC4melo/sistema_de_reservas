@@ -5,6 +5,7 @@ import br.com.danielcamelo.sistema_de_reservas.entity.Reserva;
 import br.com.danielcamelo.sistema_de_reservas.entity.Sala;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import br.com.danielcamelo.sistema_de_reservas.entity.TipoCriador;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,11 +18,15 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
     // Verifica conflito normal (para criar)
     boolean existsBySalaAndDataReserva(Sala sala, LocalDateTime dataReserva);
 
-    // --- NOVO: Verifica conflito excluindo o próprio ID (para editar) ---
-    // "Existe alguma reserva nessa sala/data cujo ID NÃO SEJA este aqui?"
     boolean existsBySalaAndDataReservaAndIdNot(Sala sala, LocalDateTime dataReserva, Integer id);
 
     long countBySalaAndDataReservaBetween(Sala sala, LocalDateTime inicio, LocalDateTime fim);
 
     List<Reserva> findBySalaAndDataReservaBetween(Sala sala, LocalDateTime inicioDia, LocalDateTime fimDia);
+
+    long countByProfessorAndDataReservaAfterAndCriadaPor(
+            Professor professor,
+            LocalDateTime data,
+            TipoCriador criadaPor
+    );
 }

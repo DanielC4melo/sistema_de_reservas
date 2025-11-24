@@ -21,8 +21,13 @@ public class ReservaService {
     @Autowired
     private EquipamentoRepository equipamentoRepository;
 
-    public List<Reserva> listarTodas() { return reservaRepository.findAll(); }
-    public Reserva buscarPorId(Integer id) { return reservaRepository.findById(id).orElse(null); }
+    public List<Reserva> listarTodas() {
+        return reservaRepository.findAll();
+    }
+
+    public Reserva buscarPorId(Integer id) {
+        return reservaRepository.findById(id).orElse(null);
+    }
 
     public List<Reserva> buscarPorProfessor(Integer idProfessor) {
         Professor professor = professorRepository.findById(idProfessor).orElse(null);
@@ -54,7 +59,11 @@ public class ReservaService {
     }
 
     public Reserva criarReserva(Reserva novaReserva) {
-        validarDadosReserva(novaReserva); // Extraí a lógica para reutilizar
+        if (novaReserva.getDataReserva().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Não é possível realizar reservas em datas passadas.");
+        }
+
+        validarDadosReserva(novaReserva);
 
         if (reservaRepository.existsBySalaAndDataReserva(novaReserva.getSala(), novaReserva.getDataReserva())) {
             throw new RuntimeException("Esta sala já está reservada para este horário!");
@@ -65,20 +74,15 @@ public class ReservaService {
         return reservaRepository.save(novaReserva);
     }
 
-    // --- NOVO MÉTODO: ATUALIZAR ---
     public Reserva atualizarReserva(Integer id, Reserva dadosAtualizados) {
         Reserva reservaExistente = buscarPorId(id);
         if (reservaExistente == null) throw new RuntimeException("Reserva não encontrada.");
 
-        // Atualiza os dados do objeto existente
-        validarDadosReserva(dadosAtualizados); // Busca Sala/Equipamento reais no banco
+        validarDadosReserva(dadosAtualizados);
 
-        // Copia os dados novos para a reserva antiga
         reservaExistente.setSala(dadosAtualizados.getSala());
         reservaExistente.setEquipamento(dadosAtualizados.getEquipamento());
-        // Nota: Não mudamos Data nem Professor na edição simplificada, mas se quiser mudar sala, precisa checar conflito.
 
-        // Checa conflito IGNORANDO a própria reserva (id)
         if (reservaRepository.existsBySalaAndDataReservaAndIdNot(dadosAtualizados.getSala(), reservaExistente.getDataReserva(), id)) {
             throw new RuntimeException("A nova sala escolhida já está ocupada neste horário!");
         }
@@ -86,7 +90,6 @@ public class ReservaService {
         return reservaRepository.save(reservaExistente);
     }
 
-    // Métodos auxiliares para não repetir código
     private void validarDadosReserva(Reserva r) {
         if (r.getSala() != null && r.getSala().getId() != null) {
             r.setSala(salaRepository.findById(r.getSala().getId()).orElseThrow(() -> new RuntimeException("Sala não encontrada")));

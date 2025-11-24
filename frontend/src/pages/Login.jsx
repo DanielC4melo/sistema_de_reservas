@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { useTheme } from '../contexts/ThemeContext'; // <--- 1. Importar o Tema
+import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Login() {
     const navigate = useNavigate();
-    const { colors } = useTheme(); // <--- 2. Pegar as cores atuais
+    const { colors } = useTheme();
 
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
 
-    // --- 3. Estilos DENTRO da função usando 'colors' ---
     const styles = {
-        container: { display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.sidebar, fontFamily: 'Arial, sans-serif', transition: '0.3s' },
+        container: { display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.sidebar, fontFamily: 'Arial, sans-serif', transition: '0.3s', position: 'relative' },
         card: { backgroundColor: colors.card, padding: '40px', borderRadius: '15px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px', textAlign: 'center', border: `1px solid ${colors.cardBorder}` },
         logo: { fontSize: '28px', color: colors.text, marginBottom: '10px', fontWeight: 'bold' },
         subtitle: { fontSize: '14px', color: colors.text, marginBottom: '30px', opacity: 0.7 },
@@ -20,7 +20,8 @@ export default function Login() {
         label: { display: 'block', marginBottom: '5px', fontSize: '14px', color: colors.text },
         input: { width: '100%', padding: '10px', borderRadius: '8px', border: `1px solid ${colors.inputBorder}`, fontSize: '16px', boxSizing: 'border-box', backgroundColor: colors.inputBg, color: colors.text },
         button: { width: '100%', padding: '12px', backgroundColor: '#5C8A58', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', cursor: 'pointer', marginTop: '10px', fontWeight: 'bold' },
-        link: { display: 'block', marginTop: '15px', fontSize: '14px', color: '#5C8A58', textDecoration: 'none', cursor: 'pointer' }
+        link: { display: 'block', marginTop: '15px', fontSize: '14px', color: '#5C8A58', textDecoration: 'none', cursor: 'pointer' },
+        themeWrapper: { position: 'absolute', top: '20px', right: '20px' }
     };
 
     const handleLogin = async () => {
@@ -32,6 +33,7 @@ export default function Login() {
             const response = await api.post('/auth/login', { email, senha });
             const usuario = response.data;
             localStorage.setItem('user', JSON.stringify(usuario));
+            
             if (usuario.tipo === 'COORDENACAO') {
                 navigate('/home-coordenacao');
             } else {
@@ -45,6 +47,10 @@ export default function Login() {
 
     return (
         <div style={styles.container}>
+            <div style={styles.themeWrapper}>
+                <ThemeToggle />
+            </div>
+
             <div style={styles.card}>
                 <h1 style={styles.logo}>UNIRIO</h1>
                 <p style={styles.subtitle}>Sistema de Reservas</p>

@@ -1,13 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext'; // <--- Importar
+import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Home() {
     const navigate = useNavigate();
-    const { colors } = useTheme(); // <--- Usar cores
+    const { colors } = useTheme();
 
     const styles = {
         container: { minHeight: '100vh', fontFamily: 'Arial, sans-serif', backgroundColor: colors.background, transition: '0.3s' },
-        // O cabeçalho usa a cor 'sidebar' do tema
         header: { backgroundColor: colors.sidebar, padding: '20px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: colors.sidebarText, transition: '0.3s' },
         logoSection: { display: 'flex', alignItems: 'center', gap: '15px' },
         logoText: { fontSize: '28px', fontWeight: 'bold', margin: 0 },
@@ -15,7 +15,6 @@ export default function Home() {
         title: { fontSize: '24px', fontWeight: 'normal' },
         grid: { display: 'flex', justifyContent: 'center', gap: '50px', marginTop: '80px', flexWrap: 'wrap' },
         card: { display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', gap: '10px', width: '150px' },
-        // Os círculos usam a cor 'card' do tema
         iconCircle: { width: '80px', height: '80px', borderRadius: '50%', backgroundColor: colors.card, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', border: `1px solid ${colors.cardBorder}`, transition: '0.3s' },
         label: { fontSize: '18px', textAlign: 'center', color: colors.text },
         btnLogout: { backgroundColor: '#d9534f', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontSize: '14px', marginLeft: '20px' }
@@ -35,8 +34,12 @@ export default function Home() {
                         <p style={styles.subText}>Universidade Federal do<br/>Estado do Rio de Janeiro</p>
                     </div>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
                     <h2 style={styles.title}>SISTEMA DE RESERVAS</h2>
+                    
+                    {/* Botão de troca de tema adicionado aqui */}
+                    <ThemeToggle />
+                    
                     <button style={styles.btnLogout} onClick={handleLogout}>SAIR</button>
                 </div>
             </header>

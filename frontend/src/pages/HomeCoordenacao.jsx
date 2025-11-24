@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function HomeCoordenacao() {
     const navigate = useNavigate();
@@ -33,17 +34,17 @@ export default function HomeCoordenacao() {
                         <p style={styles.subText}>Universidade Federal do<br/>Estado do Rio de Janeiro</p>
                     </div>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
                     <h2 style={styles.title}>Sistema de Reservas Coordenação</h2>
+                    
+                    <ThemeToggle />
+                    
                     <button style={styles.btnLogout} onClick={handleLogout}>SAIR</button>
                 </div>
             </header>
 
             <div style={styles.grid}>
-                <div style={styles.card} onClick={() => navigate('/calendario')}>
-                    <div style={styles.iconCircle}>📅</div>
-                    <span style={styles.label}>Calendário</span>
-                </div>
+                {/* REMOVIDO O CARD DE CALENDÁRIO DAQUI */}
 
                 <div style={styles.card} onClick={() => navigate('/reserva-coordenacao')}>
                     <div style={styles.iconCircle}>💻</div>

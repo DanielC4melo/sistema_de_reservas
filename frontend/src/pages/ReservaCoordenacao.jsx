@@ -1,21 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-
-const styles = {
-    container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif' },
-    sidebar: { width: '250px', backgroundColor: '#A8CFA0', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
-    content: { flex: 1, padding: '40px', backgroundColor: '#fff' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
-    slot: { padding: '15px', margin: '10px 0', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', cursor: 'pointer', fontWeight: 'bold', alignItems: 'center' },
-    vago: { backgroundColor: '#E0E0E0', color: '#333' },
-    ocupado: { backgroundColor: '#FFB3B3', color: '#cc0000', cursor: 'not-allowed', border: '1px solid red' },
-    modal: { backgroundColor: '#F0FFF4', padding: '40px', borderRadius: '20px', border: '1px solid #ccc', maxWidth: '600px', margin: '0 auto' },
-    btnConfirmar: { backgroundColor: '#88B083', padding: '10px 30px', border: 'none', borderRadius: '20px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold', marginTop: '20px' }
-};
+import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function ReservaCoordenacao() {
     const navigate = useNavigate();
+    const { colors } = useTheme();
     
     const [usuarioLogado, setUsuarioLogado] = useState(null);
     
@@ -32,6 +23,19 @@ export default function ReservaCoordenacao() {
     const [equipamentoSelecionado, setEquipamentoSelecionado] = useState('');
     
     const [horariosOcupados, setHorariosOcupados] = useState([]);
+
+    const styles = {
+        container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif', backgroundColor: colors.background, color: colors.text, transition: '0.3s' },
+        sidebar: { width: '250px', backgroundColor: colors.sidebar, padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: colors.sidebarText, transition: '0.3s' },
+        content: { flex: 1, padding: '40px', backgroundColor: colors.background, overflowY: 'auto' },
+        header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
+        slot: { padding: '15px', margin: '10px 0', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', cursor: 'pointer', fontWeight: 'bold', alignItems: 'center', border: `1px solid ${colors.cardBorder}` },
+        vago: { backgroundColor: colors.card, color: colors.text },
+        ocupado: { backgroundColor: '#FFB3B3', color: '#333', cursor: 'not-allowed' },
+        modal: { backgroundColor: colors.card, padding: '40px', borderRadius: '20px', border: `1px solid ${colors.cardBorder}`, maxWidth: '600px', margin: '0 auto', color: colors.text },
+        btnConfirmar: { backgroundColor: '#88B083', padding: '10px 30px', border: 'none', borderRadius: '20px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold', marginTop: '20px', color: '#fff' },
+        input: { padding: '5px 10px', borderRadius: '15px', border: `1px solid ${colors.inputBorder}`, backgroundColor: colors.inputBg, color: colors.text }
+    };
 
     const horariosFixos = [
         { inicio: '14:00', fim: '16:00' },
@@ -54,7 +58,7 @@ export default function ReservaCoordenacao() {
         if (salaSelecionada && dataSelecionada) {
             api.get(`/reservas/ocupadas?salaId=${salaSelecionada}&data=${dataSelecionada}`)
                 .then(res => setHorariosOcupados(res.data))
-                .catch(console.error);
+                .catch(() => setHorariosOcupados([]));
         } else {
             setHorariosOcupados([]);
         }
@@ -77,7 +81,6 @@ export default function ReservaCoordenacao() {
             alert("Preencha todos os dados!"); return;
         }
 
-        // Validação do Equipamento
         if (equipamento && !equipamentoSelecionado) {
             alert("Você marcou que quer equipamento, mas não selecionou qual!");
             return;
@@ -99,6 +102,7 @@ export default function ReservaCoordenacao() {
             alert("Reserva realizada com sucesso pela Coordenação!");
             navigate('/home-coordenacao');
         } catch (error) {
+            console.error(error);
             const msg = error.response?.data || "Erro ao realizar reserva.";
             alert(msg);
         }
@@ -112,8 +116,15 @@ export default function ReservaCoordenacao() {
                     <p style={{fontSize: '12px'}}>Área da Coordenação</p>
                 </div>
                 <div>
-                    <div style={{marginBottom: '10px', cursor: 'pointer'}} onClick={() => navigate('/home-coordenacao')}>🏠 PÁGINA INICIAL</div>
-                    <div style={{cursor: 'pointer'}} onClick={() => navigate(-1)}>↩ VOLTAR</div>
+                    <div style={{marginBottom: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px'}} onClick={() => navigate('/home-coordenacao')}>
+                        <span>🏠</span> PÁGINA INICIAL
+                    </div>
+                    <div style={{cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px'}} onClick={() => navigate(-1)}>
+                        <span>↩</span> VOLTAR
+                    </div>
+                    <div style={{marginTop: '20px'}}>
+                        <ThemeToggle />
+                    </div>
                 </div>
             </div>
 
@@ -126,7 +137,7 @@ export default function ReservaCoordenacao() {
                             <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
                                 <span style={{fontSize: '16px'}}>Professor Responsável:</span>
                                 <select 
-                                    style={{padding: '5px', borderRadius: '5px', width: '200px'}}
+                                    style={{...styles.input, width: '200px'}}
                                     onChange={(e) => setProfessorSelecionado(e.target.value)}
                                     value={professorSelecionado}
                                 >
@@ -138,7 +149,7 @@ export default function ReservaCoordenacao() {
                             <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
                                 <span style={{fontSize: '16px'}}>Sala:</span>
                                 <select 
-                                    style={{padding: '5px', borderRadius: '5px', width: '200px'}}
+                                    style={{...styles.input, width: '200px'}}
                                     onChange={(e) => setSalaSelecionada(e.target.value)}
                                     value={salaSelecionada}
                                 >
@@ -149,7 +160,13 @@ export default function ReservaCoordenacao() {
 
                             <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
                                 <span style={{fontSize: '16px'}}>Data:</span>
-                                <input type="date" onChange={(e) => setDataSelecionada(e.target.value)} value={dataSelecionada} />
+                                <input 
+                                    type="date" 
+                                    style={styles.input}
+                                    min={new Date().toISOString().split('T')[0]} 
+                                    onChange={(e) => setDataSelecionada(e.target.value)} 
+                                    value={dataSelecionada} 
+                                />
                             </div>
                         </div>
 
@@ -162,8 +179,8 @@ export default function ReservaCoordenacao() {
                                         style={{...styles.slot, ...(estaOcupado ? styles.ocupado : styles.vago)}}
                                         onClick={() => selecionarHorario(h.inicio)}
                                     >
-                                        <span>{h.inicio}</span>
-                                        <span>{estaOcupado ? "OCUPADO" : "Disponível"}</span>
+                                        <span style={{fontSize: '18px'}}>{h.inicio}</span>
+                                        <span style={{fontSize: '18px'}}>{estaOcupado ? "OCUPADO" : "Disponível"}</span>
                                         <span></span>
                                     </div>
                                 );
@@ -173,22 +190,21 @@ export default function ReservaCoordenacao() {
                 ) : (
                     <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%'}}>
                         <div style={styles.modal}>
-                            <h1 style={{textAlign: 'right'}}>Confirmar (Modo Coordenação)</h1>
+                            <h1 style={{textAlign: 'right', fontWeight: 'normal'}}>Confirmar (Coordenação)</h1>
                             <p><b>Professor:</b> {professores.find(p => p.idProfessor == professorSelecionado)?.nomeProfessor}</p>
                             <p><b>Sala:</b> {salas.find(s => s.id == salaSelecionada)?.nome}</p>
                             <p><b>Data:</b> {dataSelecionada} às {horarioSelecionado}</p>
                             
-                            {/* --- ÁREA DO EQUIPAMENTO (ADICIONADA AGORA) --- */}
-                            <div style={{backgroundColor: '#D9D9D9', padding: '15px', borderRadius: '10px', margin: '20px 0'}}>
+                            <div style={{backgroundColor: colors.inputBg, border: `1px solid ${colors.inputBorder}`, padding: '15px', borderRadius: '10px', margin: '20px 0'}}>
                                 <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
                                     <span>Reservar Equipamento?</span>
-                                    <button onClick={() => setEquipamento(true)} style={{cursor:'pointer', border:'1px solid #333', background: equipamento ? '#88B083' : '#fff'}}>SIM</button>
-                                    <button onClick={() => setEquipamento(false)} style={{cursor:'pointer', border:'1px solid #333', background: !equipamento ? '#FFB3B3' : '#fff'}}>NÃO</button>
+                                    <button onClick={() => setEquipamento(true)} style={{cursor:'pointer', border:`1px solid ${colors.text}`, background: equipamento ? '#88B083' : 'transparent', color: colors.text}}>SIM</button>
+                                    <button onClick={() => setEquipamento(false)} style={{cursor:'pointer', border:`1px solid ${colors.text}`, background: !equipamento ? '#FFB3B3' : 'transparent', color: colors.text}}>NÃO</button>
                                 </div>
                                 
                                 {equipamento && (
                                     <select 
-                                        style={{padding: '8px', borderRadius: '5px', width: '100%'}}
+                                        style={{...styles.input, width: '100%'}}
                                         onChange={(e) => setEquipamentoSelecionado(e.target.value)}
                                         value={equipamentoSelecionado}
                                     >
@@ -199,10 +215,11 @@ export default function ReservaCoordenacao() {
                                     </select>
                                 )}
                             </div>
-                            {/* --------------------------------------------- */}
 
-                            <button style={styles.btnConfirmar} onClick={confirmarReserva}>Confirmar</button>
-                            <button onClick={() => setHorarioSelecionado(null)} style={{display:'block', margin:'10px auto', border:'none', background:'none', textDecoration:'underline', cursor:'pointer'}}>Cancelar</button>
+                            <div style={{textAlign: 'center'}}>
+                                <button style={styles.btnConfirmar} onClick={confirmarReserva}>Confirmar</button>
+                                <button onClick={() => setHorarioSelecionado(null)} style={{display:'block', margin:'10px auto', border:'none', background:'none', textDecoration:'underline', cursor:'pointer', color: colors.text}}>Cancelar</button>
+                            </div>
                         </div>
                     </div>
                 )}

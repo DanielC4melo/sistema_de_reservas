@@ -1,22 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-
-const styles = {
-    container: { display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5', fontFamily: 'Arial' },
-    card: { display: 'flex', width: '800px', height: '500px', backgroundColor: '#fff', boxShadow: '0 0 20px rgba(0,0,0,0.1)', borderRadius: '10px', overflow: 'hidden' },
-    leftSide: { flex: 1, backgroundColor: '#A8CFA0', padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: '#333' },
-    rightSide: { flex: 1.5, padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
-    title: { textAlign: 'right', fontSize: '24px', marginBottom: '30px', color: '#555' },
-    inputGroup: { marginBottom: '15px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' },
-    label: { marginRight: '10px', fontWeight: 'bold', color: '#666' },
-    input: { padding: '8px', borderRadius: '15px', border: '1px solid #ccc', width: '200px', backgroundColor: '#e0e0e0' },
-    btnConfirmar: { backgroundColor: '#88B083', color: '#fff', border: 'none', padding: '10px 40px', borderRadius: '20px', fontSize: '16px', cursor: 'pointer', alignSelf: 'flex-end', marginTop: '20px' },
-    navLink: { cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginTop: '10px' }
-};
+import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function CadastrarUsuario() {
     const navigate = useNavigate();
+    const { colors } = useTheme();
     const [form, setForm] = useState({ nomeProfessor: '', matriculaProfessor: '', emailProfessor: '', senhaProfessor: '' });
 
     const handleChange = (e) => {
@@ -33,6 +23,19 @@ export default function CadastrarUsuario() {
         }
     };
 
+    const styles = {
+        container: { display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, fontFamily: 'Arial', transition: '0.3s' },
+        card: { display: 'flex', width: '800px', height: '500px', backgroundColor: colors.card, boxShadow: '0 0 20px rgba(0,0,0,0.1)', borderRadius: '10px', overflow: 'hidden', border: `1px solid ${colors.cardBorder}` },
+        leftSide: { flex: 1, backgroundColor: colors.sidebar, padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: colors.sidebarText, transition: '0.3s' },
+        rightSide: { flex: 1.5, padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: colors.card },
+        title: { textAlign: 'right', fontSize: '24px', marginBottom: '30px', color: colors.text },
+        inputGroup: { marginBottom: '15px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' },
+        label: { marginRight: '10px', fontWeight: 'bold', color: colors.text },
+        input: { padding: '8px', borderRadius: '15px', border: `1px solid ${colors.inputBorder}`, width: '200px', backgroundColor: colors.inputBg, color: colors.text },
+        btnConfirmar: { backgroundColor: '#88B083', color: '#fff', border: 'none', padding: '10px 40px', borderRadius: '20px', fontSize: '16px', cursor: 'pointer', alignSelf: 'flex-end', marginTop: '20px' },
+        navLink: { cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', marginTop: '10px' }
+    };
+
     return (
         <div style={styles.container}>
             <div style={styles.card}>
@@ -43,12 +46,14 @@ export default function CadastrarUsuario() {
                     <div>
                         <div style={styles.navLink} onClick={() => navigate('/home-coordenacao')}>🏠 PÁGINA INICIAL</div>
                         <div style={styles.navLink} onClick={() => navigate(-1)}>↩ VOLTAR</div>
+                        
+                        <div style={{marginTop: '20px'}}>
+                            <ThemeToggle />
+                        </div>
                     </div>
                 </div>
                 <div style={styles.rightSide}>
                     <h2 style={styles.title}>Cadastrar Usuários</h2>
-                    
-                    {/* ID é automático, não precisa de campo */}
                     
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>Nome:</label>

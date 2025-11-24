@@ -1,43 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
-
-const styles = {
-    container: { display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5', fontFamily: 'Arial' },
-    card: { display: 'flex', width: '900px', height: '600px', backgroundColor: '#fff', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 0 20px rgba(0,0,0,0.1)' },
-    leftSide: { flex: 1, backgroundColor: '#A8CFA0', padding: '40px', color: '#333', display: 'flex', flexDirection: 'column' },
-    rightSide: { flex: 2, padding: '40px', display: 'flex', flexDirection: 'column', overflowY: 'auto', position: 'relative' },
-    input: { padding: '8px', borderRadius: '15px', border: '1px solid #ccc', width: '100%', marginBottom: '10px', display: 'block' },
-    btnSalvar: { backgroundColor: '#5C8A58', color: '#fff', padding: '10px 30px', border: 'none', borderRadius: '20px', cursor: 'pointer', marginTop: '20px', alignSelf: 'flex-start' },
-    sectionTitle: { marginTop: '30px', marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '5px' },
-    table: { width: '100%', borderCollapse: 'collapse', fontSize: '14px' },
-    th: { textAlign: 'left', borderBottom: '2px solid #ccc', padding: '8px' },
-    td: { padding: '8px', borderBottom: '1px solid #eee' },
-    btnIcon: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', marginLeft: '5px' },
-    
-    // Modal Styles
-    modalOverlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' },
-    modalContent: { backgroundColor: '#fff', padding: '20px', borderRadius: '10px', width: '300px', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }
-};
+import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function EditarUsuario() {
     const navigate = useNavigate();
     const { id } = useParams();
+    const { colors } = useTheme();
     
-    // Dados principais
     const [form, setForm] = useState({ nomeProfessor: '', matriculaProfessor: '', emailProfessor: '', senhaProfessor: '' });
     const [reservas, setReservas] = useState([]);
     
-    // Dados para o Modal de Edição
     const [salas, setSalas] = useState([]);
     const [equipamentos, setEquipamentos] = useState([]);
-    const [reservaEditando, setReservaEditando] = useState(null); // Se não for null, o modal abre
+    const [reservaEditando, setReservaEditando] = useState(null);
 
     useEffect(() => {
         api.get(`/professores/${id}`).then(res => setForm(res.data));
         carregarReservas();
         
-        // Carregar listas para o dropdown de edição
         api.get('/salas').then(res => setSalas(res.data));
         api.get('/equipamentos').then(res => setEquipamentos(res.data));
     }, [id]);
@@ -64,13 +46,11 @@ export default function EditarUsuario() {
             alert("Reserva cancelada!");
             carregarReservas();
         } catch (error) {
-            alert(error.response?.data);
+            alert(error.response?.data || "Erro ao cancelar");
         }
     };
 
-    // --- LÓGICA DE EDIÇÃO ---
     const abrirModalEdicao = (reserva) => {
-        // Preenche o modal com os dados atuais da reserva
         setReservaEditando({
             id: reserva.id,
             salaId: reserva.sala?.id || '',
@@ -81,14 +61,12 @@ export default function EditarUsuario() {
     const salvarEdicaoReserva = async () => {
         try {
             await api.put(`/reservas/${reservaEditando.id}`, {
-                // Enviamos apenas o que mudou (Sala e Equipamento)
-                // O backend mantém o resto
                 sala: { id: reservaEditando.salaId },
                 equipamento: reservaEditando.equipamentoId ? { id: reservaEditando.equipamentoId } : null
             });
             alert("Reserva alterada com sucesso!");
-            setReservaEditando(null); // Fecha modal
-            carregarReservas(); // Recarrega lista
+            setReservaEditando(null);
+            carregarReservas();
         } catch (error) {
             alert(error.response?.data || "Erro ao editar. Verifique conflitos de horário.");
         }
@@ -100,30 +78,51 @@ export default function EditarUsuario() {
         return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
     };
 
+    const styles = {
+        container: { display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, fontFamily: 'Arial, sans-serif', transition: '0.3s' },
+        card: { display: 'flex', width: '900px', height: '600px', backgroundColor: colors.card, borderRadius: '10px', overflow: 'hidden', boxShadow: '0 0 20px rgba(0,0,0,0.1)', border: `1px solid ${colors.cardBorder}` },
+        leftSide: { flex: 1, backgroundColor: colors.sidebar, padding: '40px', color: colors.sidebarText, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', transition: '0.3s' },
+        rightSide: { flex: 2, padding: '40px', display: 'flex', flexDirection: 'column', overflowY: 'auto', position: 'relative', backgroundColor: colors.card },
+        input: { padding: '8px', borderRadius: '15px', border: `1px solid ${colors.inputBorder}`, width: '100%', marginBottom: '10px', display: 'block', backgroundColor: colors.inputBg, color: colors.text },
+        btnSalvar: { backgroundColor: '#5C8A58', color: '#fff', padding: '10px 30px', border: 'none', borderRadius: '20px', cursor: 'pointer', marginTop: '20px', alignSelf: 'flex-start' },
+        sectionTitle: { marginTop: '30px', marginBottom: '15px', borderBottom: `1px solid ${colors.cardBorder}`, paddingBottom: '5px', color: colors.text },
+        table: { width: '100%', borderCollapse: 'collapse', fontSize: '14px' },
+        th: { textAlign: 'left', borderBottom: `2px solid ${colors.cardBorder}`, padding: '8px', color: colors.text },
+        td: { padding: '8px', borderBottom: `1px solid ${colors.cardBorder}`, color: colors.text },
+        btnIcon: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', marginLeft: '5px' },
+        modalOverlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
+        modalContent: { backgroundColor: colors.card, padding: '20px', borderRadius: '10px', width: '300px', boxShadow: '0 5px 15px rgba(0,0,0,0.3)', border: `1px solid ${colors.cardBorder}`, color: colors.text },
+        label: { color: colors.text, display: 'block', marginBottom: '5px' },
+        navLink: { cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }
+    };
+
     return (
         <div style={styles.container}>
             <div style={styles.card}>
-                {/* Sidebar Esquerda */}
                 <div style={styles.leftSide}>
-                    <h2 style={{marginTop: 0}}>Editar Usuário</h2>
-                    <p>Gerenciar professor e suas reservas.</p>
-                    <p onClick={() => navigate(-1)} style={{cursor:'pointer', marginTop:'auto'}}>↩ Voltar</p>
+                    <div>
+                        <h2 style={{marginTop: 0}}>Editar Usuário</h2>
+                        <p>Gerenciar professor e suas reservas.</p>
+                    </div>
+                    
+                    <div>
+                        <div style={styles.navLink} onClick={() => navigate(-1)}>↩ Voltar</div>
+                        <div style={{marginTop: '20px'}}>
+                            <ThemeToggle />
+                        </div>
+                    </div>
                 </div>
                 
-                {/* Conteúdo Direita */}
                 <div style={styles.rightSide}>
-                    
-                    {/* Formulário Professor */}
-                    <h3 style={{marginTop: 0}}>Dados Pessoais</h3>
+                    <h3 style={{marginTop: 0, color: colors.text}}>Dados Pessoais</h3>
                     <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
-                        <div><label>Nome:</label><input name="nomeProfessor" value={form.nomeProfessor} style={styles.input} onChange={handleChange} /></div>
-                        <div><label>Matrícula:</label><input name="matriculaProfessor" value={form.matriculaProfessor} style={styles.input} onChange={handleChange} /></div>
-                        <div><label>Email:</label><input name="emailProfessor" value={form.emailProfessor} style={styles.input} onChange={handleChange} /></div>
-                        <div><label>Senha:</label><input name="senhaProfessor" type="password" value={form.senhaProfessor} style={styles.input} onChange={handleChange} /></div>
+                        <div><label style={styles.label}>Nome:</label><input name="nomeProfessor" value={form.nomeProfessor} style={styles.input} onChange={handleChange} /></div>
+                        <div><label style={styles.label}>Matrícula:</label><input name="matriculaProfessor" value={form.matriculaProfessor} style={styles.input} onChange={handleChange} /></div>
+                        <div><label style={styles.label}>Email:</label><input name="emailProfessor" value={form.emailProfessor} style={styles.input} onChange={handleChange} /></div>
+                        <div><label style={styles.label}>Senha:</label><input name="senhaProfessor" type="password" value={form.senhaProfessor} style={styles.input} onChange={handleChange} /></div>
                     </div>
                     <button style={styles.btnSalvar} onClick={handleSalvarUsuario}>Salvar Alterações</button>
 
-                    {/* Lista de Reservas */}
                     <h3 style={styles.sectionTitle}>Reservas do Professor</h3>
                     <div style={{flex: 1, overflowY: 'auto'}}>
                         <table style={styles.table}>
@@ -151,13 +150,12 @@ export default function EditarUsuario() {
                         </table>
                     </div>
 
-                    {/* MODAL DE EDIÇÃO (Aparece se reservaEditando != null) */}
                     {reservaEditando && (
                         <div style={styles.modalOverlay}>
                             <div style={styles.modalContent}>
-                                <h3>Editar Reserva #{reservaEditando.id}</h3>
+                                <h3 style={{marginTop:0}}>Editar Reserva #{reservaEditando.id}</h3>
                                 
-                                <label>Alterar Sala:</label>
+                                <label style={styles.label}>Alterar Sala:</label>
                                 <select 
                                     style={styles.input}
                                     value={reservaEditando.salaId}
@@ -166,7 +164,7 @@ export default function EditarUsuario() {
                                     {salas.map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}
                                 </select>
 
-                                <label>Alterar Equipamento:</label>
+                                <label style={styles.label}>Alterar Equipamento:</label>
                                 <select 
                                     style={styles.input}
                                     value={reservaEditando.equipamentoId}
@@ -177,13 +175,12 @@ export default function EditarUsuario() {
                                 </select>
 
                                 <div style={{marginTop: '20px', display: 'flex', justifyContent: 'space-between'}}>
-                                    <button onClick={() => setReservaEditando(null)} style={{cursor:'pointer', border:'none', background:'none', textDecoration:'underline'}}>Cancelar</button>
+                                    <button onClick={() => setReservaEditando(null)} style={{cursor:'pointer', border:'none', background:'none', textDecoration:'underline', color: colors.text}}>Cancelar</button>
                                     <button onClick={salvarEdicaoReserva} style={{backgroundColor:'#5C8A58', color:'white', border:'none', padding:'5px 15px', borderRadius:'10px', cursor:'pointer'}}>Salvar</button>
                                 </div>
                             </div>
                         </div>
                     )}
-
                 </div>
             </div>
         </div>

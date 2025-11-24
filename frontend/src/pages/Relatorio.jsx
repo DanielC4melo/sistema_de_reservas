@@ -1,33 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-
-const styles = {
-    container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif' },
-    sidebar: { width: '250px', backgroundColor: '#A8CFA0', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
-    content: { flex: 1, padding: '40px', backgroundColor: '#fff', overflowY: 'auto' },
-    title: { textAlign: 'right', fontWeight: 'normal', marginBottom: '40px' },
-    
-    statsGrid: { display: 'flex', gap: '20px', marginBottom: '40px', alignItems: 'stretch' },
-    
-    // Card Padrão
-    card: { flex: 1, padding: '20px', borderRadius: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', textAlign: 'center', backgroundColor: '#f9f9f9', display: 'flex', flexDirection: 'column', justifyContent: 'center' },
-    
-    // Card da Lista (Mais largo para caber os detalhes)
-    cardList: { flex: 2, padding: '20px', borderRadius: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', backgroundColor: '#f9f9f9', display: 'flex', flexDirection: 'column' },
-    
-    number: { fontSize: '36px', fontWeight: 'bold', color: '#5C8A58', margin: '10px 0' },
-    label: { color: '#666', fontSize: '14px' },
-    
-    // Estilo da lista detalhada
-    listContainer: { marginTop: '10px', maxHeight: '300px', overflowY: 'auto', textAlign: 'left', borderTop: '1px solid #ddd', paddingTop: '10px' },
-    listItem: { marginBottom: '10px', borderBottom: '1px solid #eee', paddingBottom: '8px' },
-    itemHeader: { fontSize: '15px', fontWeight: 'bold', color: '#333', marginBottom: '4px' },
-    itemDetails: { fontSize: '13px', color: '#666', display: 'flex', gap: '15px', flexWrap: 'wrap' }
-};
+import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Relatorio() {
     const navigate = useNavigate();
+    const { colors } = useTheme();
     
     const [estatisticas, setEstatisticas] = useState({
         total: 0,
@@ -36,6 +15,28 @@ export default function Relatorio() {
         salaFavorita: '-',
         usuarioTipo: ''
     });
+
+    const styles = {
+        container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif', backgroundColor: colors.background, color: colors.text, transition: '0.3s' },
+        sidebar: { width: '250px', backgroundColor: colors.sidebar, padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: colors.sidebarText, transition: '0.3s' },
+        content: { flex: 1, padding: '40px', backgroundColor: colors.background, overflowY: 'auto' },
+        title: { textAlign: 'right', fontWeight: 'normal', marginBottom: '40px' },
+        
+        statsGrid: { display: 'flex', gap: '20px', marginBottom: '40px', alignItems: 'stretch' },
+        
+        card: { flex: 1, padding: '20px', borderRadius: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', textAlign: 'center', backgroundColor: colors.card, border: `1px solid ${colors.cardBorder}`, display: 'flex', flexDirection: 'column', justifyContent: 'center' },
+        cardList: { flex: 2, padding: '20px', borderRadius: '15px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', backgroundColor: colors.card, border: `1px solid ${colors.cardBorder}`, display: 'flex', flexDirection: 'column' },
+        
+        number: { fontSize: '36px', fontWeight: 'bold', color: '#5C8A58', margin: '10px 0' },
+        label: { color: colors.text, fontSize: '14px', opacity: 0.7 },
+        
+        listContainer: { marginTop: '10px', maxHeight: '300px', overflowY: 'auto', textAlign: 'left', borderTop: `1px solid ${colors.cardBorder}`, paddingTop: '10px' },
+        listItem: { marginBottom: '10px', borderBottom: `1px solid ${colors.cardBorder}`, paddingBottom: '8px' },
+        itemHeader: { fontSize: '15px', fontWeight: 'bold', color: colors.text, marginBottom: '4px' },
+        itemDetails: { fontSize: '13px', color: colors.text, opacity: 0.8, display: 'flex', gap: '15px', flexWrap: 'wrap' },
+        
+        navLink: { cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }
+    };
 
     useEffect(() => {
         const userStorage = localStorage.getItem('user');
@@ -52,25 +53,18 @@ export default function Relatorio() {
         api.get(url)
             .then(res => {
                 const reservas = res.data;
-                
-                // 1. Total
                 const total = reservas.length;
-
-                // 2. Futuras (Detalhes completos)
                 const agora = new Date();
                 const reservasFuturas = reservas.filter(r => new Date(r.dataReserva) > agora);
                 
-                // Mapear os dados para o formato que a tela precisa
                 const listaDetalhada = reservasFuturas.map(r => {
                     const dataObj = new Date(r.dataReserva);
                     const dia = dataObj.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'});
                     const hora = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                     
                     const nomeSala = r.sala ? r.sala.nome : 'Sala removida';
-                    // Nome do professor responsável (importante para a coordenação ver)
                     const nomeProf = r.professor ? r.professor.nomeProfessor : 'Desconhecido';
                     
-                    // Equipamento: Conta 1 se tiver objeto, 0 se for null
                     const temEquip = r.equipamento ? true : false;
                     const nomeEquip = r.equipamento ? r.equipamento.nome : '';
                     const qtdEquip = temEquip ? 1 : 0;
@@ -83,7 +77,6 @@ export default function Relatorio() {
                     };
                 });
 
-                // 3. Sala Favorita
                 const contagemSalas = {};
                 reservas.forEach(r => {
                     const nome = r.sala ? r.sala.nome : 'Indefinida';
@@ -121,13 +114,17 @@ export default function Relatorio() {
                 </div>
                 <div>
                     <div 
-                        style={{marginBottom: '10px', cursor: 'pointer'}} 
+                        style={styles.navLink}
                         onClick={() => navigate(estatisticas.usuarioTipo === 'COORDENACAO' ? '/home-coordenacao' : '/home')}
                     >
-                        🏠 PÁGINA INICIAL
+                        <span>🏠</span> PÁGINA INICIAL
                     </div>
-                    <div style={{cursor: 'pointer'}} onClick={() => navigate(-1)}>
-                        ↩ VOLTAR
+                    <div style={{cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px'}} onClick={() => navigate(-1)}>
+                        <span>↩</span> VOLTAR
+                    </div>
+                    
+                    <div style={{marginTop: '20px'}}>
+                        <ThemeToggle />
                     </div>
                 </div>
             </div>
@@ -145,9 +142,9 @@ export default function Relatorio() {
                         <p style={styles.label}>Histórico completo</p>
                     </div>
 
-                    {/* Card 2: Lista Detalhada (O que você pediu) */}
+                    {/* Card 2: Lista Detalhada */}
                     <div style={styles.cardList}>
-                        <h3 style={{textAlign: 'center'}}>Próximas Aulas ({estatisticas.futurasQtd})</h3>
+                        <h3 style={{textAlign: 'center', color: colors.text}}>Próximas Aulas ({estatisticas.futurasQtd})</h3>
                         
                         <div style={styles.listContainer}>
                             {estatisticas.futurasLista.length > 0 ? (
@@ -161,7 +158,7 @@ export default function Relatorio() {
                                     </div>
                                 ))
                             ) : (
-                                <p style={{textAlign: 'center', color: '#999', marginTop: '20px'}}>Nenhuma aula futura.</p>
+                                <p style={{textAlign: 'center', color: colors.text, opacity: 0.5, marginTop: '20px'}}>Nenhuma aula futura.</p>
                             )}
                         </div>
                     </div>

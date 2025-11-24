@@ -1,24 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-
-const styles = {
-    container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif' },
-    sidebar: { width: '250px', backgroundColor: '#A8CFA0', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
-    content: { flex: 1, padding: '40px', backgroundColor: '#fff' },
-    calendarHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-    controls: { marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '15px' },
-    grid: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px', textAlign: 'center' },
-    dayLabel: { fontWeight: 'bold', marginBottom: '10px', color: '#555' },
-    dayCell: { height: '100px', border: '1px solid #ddd', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '10px', position: 'relative' },
-    dayNumber: { fontSize: '18px', fontWeight: 'bold' },
-    reservaVerde: { backgroundColor: '#B3FFB3', color: '#006400', fontSize: '12px', padding: '2px', borderRadius: '4px', width: '100%', marginTop: '2px' },
-    reservaVermelha: { backgroundColor: '#FFB3B3', color: '#8B0000', fontSize: '12px', padding: '2px', borderRadius: '4px', width: '100%', marginTop: '2px' },
-    navButton: { background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#333' }
-};
+import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Calendario() {
     const navigate = useNavigate();
+    const { colors } = useTheme();
     
     const [dataAtual, setDataAtual] = useState(new Date());
     const [salas, setSalas] = useState([]);
@@ -27,20 +15,40 @@ export default function Calendario() {
     const [minhasReservasDias, setMinhasReservasDias] = useState([]);
     const [diasLotados, setDiasLotados] = useState([]);
 
-    // 1. Carregar lista de salas
+    const handleLogout = () => {
+        localStorage.removeItem('user');
+        navigate('/');
+    };
+
+    const styles = {
+        container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif', backgroundColor: colors.background, color: colors.text, transition: '0.3s' },
+        sidebar: { width: '250px', backgroundColor: colors.sidebar, padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: colors.sidebarText, transition: '0.3s' },
+        content: { flex: 1, padding: '40px', backgroundColor: colors.background, overflowY: 'auto' },
+        calendarHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+        controls: { marginBottom: '20px', padding: '15px', backgroundColor: colors.card, borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '15px', border: `1px solid ${colors.cardBorder}` },
+        grid: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px', textAlign: 'center' },
+        dayLabel: { fontWeight: 'bold', marginBottom: '10px', color: colors.text },
+        dayCell: { height: '100px', border: `1px solid ${colors.cardBorder}`, borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '10px', position: 'relative', backgroundColor: colors.card },
+        dayNumber: { fontSize: '18px', fontWeight: 'bold' },
+        reservaVerde: { backgroundColor: '#B3FFB3', color: '#006400', fontSize: '12px', padding: '2px', borderRadius: '4px', width: '100%', marginTop: '2px' },
+        reservaVermelha: { backgroundColor: '#FFB3B3', color: '#8B0000', fontSize: '12px', padding: '2px', borderRadius: '4px', width: '100%', marginTop: '2px' },
+        navButton: { background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: colors.text },
+        navLink: { cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' },
+        btnLogout: { cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', color: '#ff6b6b', fontWeight: 'bold', marginTop: '10px' },
+        select: { padding: '5px', borderRadius: '5px', backgroundColor: colors.inputBg, color: colors.text, border: `1px solid ${colors.inputBorder}` }
+    };
+
     useEffect(() => {
         api.get('/salas').then(res => setSalas(res.data));
     }, []);
 
-    // 2. Carregar dados do calendário (sempre que muda mês ou sala)
     useEffect(() => {
         const userStorage = localStorage.getItem('user');
         if (!userStorage) return;
         const usuario = JSON.parse(userStorage);
-        const mes = dataAtual.getMonth(); // 0-11
+        const mes = dataAtual.getMonth();
         const ano = dataAtual.getFullYear();
 
-        // A. Buscar "Minhas Reservas" (Verde)
         api.get(`/reservas/professor/${usuario.id}`).then(res => {
             const dias = res.data
                 .map(r => new Date(r.dataReserva))
@@ -49,22 +57,18 @@ export default function Calendario() {
             setMinhasReservasDias(dias);
         });
 
-        // B. Buscar "Dias Lotados" (Vermelho) - Só se tiver sala selecionada
         if (salaSelecionada) {
-            // O backend espera mês 1-12, o JS usa 0-11, então somamos +1
             api.get(`/reservas/lotacao?salaId=${salaSelecionada}&mes=${mes + 1}&ano=${ano}`)
                 .then(res => {
-                    console.log("Dias lotados:", res.data);
                     setDiasLotados(res.data);
                 })
-                .catch(console.error);
+                .catch(() => setDiasLotados([]));
         } else {
             setDiasLotados([]);
         }
 
     }, [dataAtual, salaSelecionada]);
 
-    // Lógica de navegação e dias
     const ano = dataAtual.getFullYear();
     const mes = dataAtual.getMonth();
     const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -84,19 +88,28 @@ export default function Calendario() {
                     <p style={{fontSize: '12px'}}>Sistema de Reservas</p>
                 </div>
                 <div>
-                    <div style={{marginBottom: '10px', cursor: 'pointer'}} onClick={() => navigate('/home')}>🏠 PÁGINA INICIAL</div>
-                    <div style={{cursor: 'pointer'}} onClick={() => navigate(-1)}>↩ VOLTAR</div>
+                    <div style={styles.navLink} onClick={() => navigate('/home')}>
+                        <span>🏠</span> PÁGINA INICIAL
+                    </div>
+                    <div style={styles.navLink} onClick={() => navigate(-1)}>
+                        <span>↩</span> VOLTAR
+                    </div>
+                    <div style={styles.btnLogout} onClick={handleLogout}>
+                        <span>🚪</span> SAIR
+                    </div>
+                    <div style={{marginTop: '20px'}}>
+                        <ThemeToggle />
+                    </div>
                 </div>
             </div>
 
             <div style={styles.content}>
-                {/* Filtro de Sala */}
                 <div style={styles.controls}>
                     <label>Ver disponibilidade da Sala:</label>
                     <select 
                         onChange={(e) => setSalaSelecionada(e.target.value)} 
                         value={salaSelecionada}
-                        style={{padding: '5px', borderRadius: '5px'}}
+                        style={styles.select}
                     >
                         <option value="">Nenhuma (Ver apenas minhas reservas)</option>
                         {salas.map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}

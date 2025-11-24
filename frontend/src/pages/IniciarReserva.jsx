@@ -1,40 +1,39 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-
-const styles = {
-    container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif' },
-    sidebar: { width: '250px', backgroundColor: '#A8CFA0', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
-    content: { flex: 1, padding: '40px', backgroundColor: '#fff' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
-    slot: { padding: '15px', margin: '10px 0', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', cursor: 'pointer', fontWeight: 'bold', alignItems: 'center' },
-    vago: { backgroundColor: '#E0E0E0', color: '#333' },
-    ocupado: { backgroundColor: '#FFB3B3', color: '#cc0000', cursor: 'not-allowed', border: '1px solid red' },
-    modal: { backgroundColor: '#F0FFF4', padding: '40px', borderRadius: '20px', border: '1px solid #ccc', maxWidth: '600px', margin: '0 auto' },
-    btnConfirmar: { backgroundColor: '#88B083', padding: '10px 30px', border: 'none', borderRadius: '20px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold', marginTop: '20px' }
-};
+import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function IniciarReserva() {
     const navigate = useNavigate();
+    const { colors } = useTheme();
     
-    // Dados do usuário logado
     const [usuario, setUsuario] = useState(null);
-    
-    // Listas vindas do Backend
     const [salas, setSalas] = useState([]);
     const [equipamentosLista, setEquipamentosLista] = useState([]);
 
-    // Seleções do formulário
     const [salaSelecionada, setSalaSelecionada] = useState('');
     const [dataSelecionada, setDataSelecionada] = useState('');
     const [horarioSelecionado, setHorarioSelecionado] = useState(null);
     
-    // Lógica do Equipamento
     const [equipamento, setEquipamento] = useState(false);
     const [equipamentoSelecionado, setEquipamentoSelecionado] = useState('');
     
-    // Controle de horários ocupados
     const [horariosOcupados, setHorariosOcupados] = useState([]);
+
+    const styles = {
+        container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif', backgroundColor: colors.background, color: colors.text, transition: '0.3s' },
+        sidebar: { width: '250px', backgroundColor: colors.sidebar, padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: colors.sidebarText, transition: '0.3s' },
+        content: { flex: 1, padding: '40px', backgroundColor: colors.background, overflowY: 'auto' },
+        header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
+        slot: { padding: '15px', margin: '10px 0', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', cursor: 'pointer', fontWeight: 'bold', alignItems: 'center', border: `1px solid ${colors.cardBorder}` },
+        vago: { backgroundColor: colors.card, color: colors.text },
+        ocupado: { backgroundColor: '#FFB3B3', color: '#333', cursor: 'not-allowed' },
+        modal: { backgroundColor: colors.card, padding: '40px', borderRadius: '20px', border: `1px solid ${colors.cardBorder}`, maxWidth: '600px', margin: '0 auto', color: colors.text },
+        btnConfirmar: { backgroundColor: '#88B083', padding: '10px 30px', border: 'none', borderRadius: '20px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold', marginTop: '20px', color: '#fff' },
+        input: { padding: '5px 10px', borderRadius: '15px', border: `1px solid ${colors.inputBorder}`, backgroundColor: colors.inputBg, color: colors.text },
+        navLink: { cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }
+    };
 
     const horariosFixos = [
         { inicio: '14:00', fim: '16:00' },
@@ -59,7 +58,7 @@ export default function IniciarReserva() {
         if (salaSelecionada && dataSelecionada) {
             api.get(`/reservas/ocupadas?salaId=${salaSelecionada}&data=${dataSelecionada}`)
                 .then(res => setHorariosOcupados(res.data))
-                .catch(console.error);
+                .catch(() => setHorariosOcupados([]));
         } else {
             setHorariosOcupados([]);
         }
@@ -70,10 +69,7 @@ export default function IniciarReserva() {
             alert("Este horário já está reservado!");
             return;
         }
-        if (!salaSelecionada || !dataSelecionada) {
-            alert("Por favor, selecione uma Sala e uma Data antes de escolher o horário.");
-            return;
-        }
+        // REMOVIDA A VALIDAÇÃO AQUI PARA PERMITIR ABRIR O MODAL
         setHorarioSelecionado(horario);
     };
 
@@ -93,7 +89,7 @@ export default function IniciarReserva() {
         const payload = {
             dataReserva: dataISO,
             sala: { id: salaSelecionada },
-            professor: { idProfessor: usuario.id }, // Usa o ID do professor logado
+            professor: { idProfessor: usuario.id },
             criadaPor: "PROFESSOR",
             equipamento: (equipamento && equipamentoSelecionado) ? { id: equipamentoSelecionado } : null
         };
@@ -117,11 +113,15 @@ export default function IniciarReserva() {
                     <p style={{fontSize: '12px'}}>Sistema de Reservas</p>
                 </div>
                 <div>
-                    <div style={{marginBottom: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px'}} onClick={() => navigate('/home')}>
+                    <div style={styles.navLink} onClick={() => navigate('/home')}>
                         <span>🏠</span> PÁGINA INICIAL
                     </div>
-                    <div style={{cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px'}} onClick={() => navigate(-1)}>
+                    <div style={styles.navLink} onClick={() => navigate(-1)}>
                         <span>↩</span> VOLTAR
+                    </div>
+                    
+                    <div style={{marginTop: '20px'}}>
+                        <ThemeToggle />
                     </div>
                 </div>
             </div>
@@ -135,7 +135,7 @@ export default function IniciarReserva() {
                             <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
                                 <span style={{fontSize: '18px'}}>Sala:</span>
                                 <select 
-                                    style={{padding: '5px 10px', borderRadius: '15px', border: '1px solid #ccc', backgroundColor: '#D9D9D9'}}
+                                    style={styles.input}
                                     onChange={(e) => setSalaSelecionada(e.target.value)}
                                     value={salaSelecionada}
                                 >
@@ -147,7 +147,8 @@ export default function IniciarReserva() {
                                 <span style={{fontSize: '18px'}}>Dia:</span>
                                 <input 
                                     type="date" 
-                                    style={{padding: '5px 10px', borderRadius: '15px', border: '1px solid #ccc', backgroundColor: '#D9D9D9'}}
+                                    style={styles.input}
+                                    min={new Date().toISOString().split('T')[0]} 
                                     onChange={(e) => setDataSelecionada(e.target.value)} 
                                     value={dataSelecionada}
                                 />
@@ -177,23 +178,22 @@ export default function IniciarReserva() {
                             <h1 style={{textAlign: 'right', fontWeight: 'normal'}}>Confirmar Reserva</h1>
                             
                             <div style={{display: 'flex', justifyContent: 'space-between', margin: '20px 0', fontSize: '18px'}}>
-                                <span>Sala {salas.find(s => s.id == salaSelecionada)?.nome}</span>
-                                <span>Data: {dataSelecionada} {horarioSelecionado}</span>
+                                <span>Sala {salas.find(s => s.id == salaSelecionada)?.nome || "Não selecionada"}</span>
+                                <span>Data: {dataSelecionada || "Não selecionada"} {horarioSelecionado}</span>
                             </div>
 
-                            {/* --- ÁREA DO EQUIPAMENTO --- */}
-                            <div style={{backgroundColor: '#D9D9D9', padding: '20px', borderRadius: '15px', display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                            <div style={{backgroundColor: colors.inputBg, border: `1px solid ${colors.inputBorder}`, padding: '20px', borderRadius: '15px', display: 'flex', flexDirection: 'column', gap: '15px'}}>
                                 <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
                                     <span>Reservar Equipamento:</span>
                                     <div style={{display: 'flex', gap: '5px'}}>
-                                        <button onClick={() => setEquipamento(true)} style={{cursor:'pointer', border:'1px solid #333', background: equipamento ? '#88B083' : '#fff'}}>✅</button>
-                                        <button onClick={() => setEquipamento(false)} style={{cursor:'pointer', border:'1px solid #333', background: !equipamento ? '#FFB3B3' : '#fff'}}>❎</button>
+                                        <button onClick={() => setEquipamento(true)} style={{cursor:'pointer', border:`1px solid ${colors.text}`, background: equipamento ? '#88B083' : 'transparent', color: colors.text}}>✅</button>
+                                        <button onClick={() => setEquipamento(false)} style={{cursor:'pointer', border:`1px solid ${colors.text}`, background: !equipamento ? '#FFB3B3' : 'transparent', color: colors.text}}>❎</button>
                                     </div>
                                 </div>
                                 
                                 {equipamento && (
                                     <select 
-                                        style={{padding: '10px', borderRadius: '10px', border: 'none'}}
+                                        style={styles.input}
                                         onChange={(e) => setEquipamentoSelecionado(e.target.value)}
                                         value={equipamentoSelecionado}
                                     >
@@ -204,7 +204,6 @@ export default function IniciarReserva() {
                                     </select>
                                 )}
                             </div>
-                            {/* --------------------------- */}
 
                             <div style={{textAlign: 'center', marginTop: '20px'}}>
                                 <button style={styles.btnConfirmar} onClick={confirmarReserva}>Confirmar</button>
