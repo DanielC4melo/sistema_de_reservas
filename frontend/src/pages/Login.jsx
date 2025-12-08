@@ -12,7 +12,17 @@ export default function Login() {
     const [senha, setSenha] = useState('');
 
     const styles = {
-        container: { display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.sidebar, fontFamily: 'Arial, sans-serif', transition: '0.3s', position: 'relative' },
+        container: { display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundImage:"url('/imagem-login.jpg')",backgroundSize:'cover', fontFamily: 'Arial, sans-serif', transition: '0.3s', position: 'relative' },overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', // branco esmaçado
+    zIndex: 1
+  },content: {
+    zIndex: 2, // fica na frente do overlay
+  },
         card: { backgroundColor: colors.card, padding: '40px', borderRadius: '15px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px', textAlign: 'center', border: `1px solid ${colors.cardBorder}` },
         logo: { fontSize: '28px', color: colors.text, marginBottom: '10px', fontWeight: 'bold' },
         subtitle: { fontSize: '14px', color: colors.text, marginBottom: '30px', opacity: 0.7 },
